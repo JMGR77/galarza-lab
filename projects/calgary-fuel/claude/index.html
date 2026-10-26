@@ -1,0 +1,600 @@
+<title>Calgary Fuel Price Workflow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: a single vertical "process line" — a numbered rail runs down the left of
+   every stage section, echoing a pipeline schematic; stages are read top-to-bottom like a
+   P&ID flow diagram, with the forecasting console as the terminus. */
+:root{
+  --bg:#f6f3ec; --surface:#ffffff; --surface-2:#efe9db; --fg:#1b2420; --muted:#5c6660;
+  --border:#ddd4c0; --accent:#c75a1f; --accent-ink:#ffffff; --safety:#1f6e5c; --danger:#a3321f;
+  --rail:#d8cdb2; --font-display:'Fraunces',Georgia,serif; --font-body:'IBM Plex Sans',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#13181a; --surface:#1b2225; --surface-2:#212a2d; --fg:#eef1ea; --muted:#9fada4;
+    --border:#30393b; --accent:#e37a3c; --accent-ink:#1b1206; --safety:#4caf94; --danger:#e06a52;
+    --rail:#3a4345; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#13181a; --surface:#1b2225; --surface-2:#212a2d; --fg:#eef1ea; --muted:#9fada4;
+  --border:#30393b; --accent:#e37a3c; --accent-ink:#1b1206; --safety:#4caf94; --danger:#e06a52;
+  --rail:#3a4345; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);margin:0;line-height:1.55;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;text-wrap:balance;margin:0}
+p{margin:0}
+.wrap{max-width:900px;margin:0 auto}
+code,.mono,.tnum{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+
+/* ---- header / stepper nav ---- */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);
+  border-bottom:1px solid var(--border);padding-block:10px;}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);}
+.navrow{display:flex;align-items:center;gap:14px;max-width:900px;margin:0 auto;overflow-x:auto;scrollbar-width:none;}
+.navrow::-webkit-scrollbar{display:none}
+.brand{font-family:var(--font-display);font-weight:700;font-size:1rem;white-space:nowrap;flex:0 0 auto}
+.steps{display:flex;gap:2px;white-space:nowrap}
+.steps a{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.03em;color:var(--muted);text-decoration:none;
+  padding:6px 9px;border-radius:5px;}
+.steps a:hover{background:var(--surface-2);color:var(--fg)}
+
+/* ---- hero ---- */
+.hero{padding-block:44px 28px}
+.hero h1{font-size:clamp(1.9rem,5vw,2.7rem);line-height:1.08;max-width:17ch}
+.hero .sub{margin-top:14px;max-width:56ch;color:var(--muted);font-size:1.02rem}
+.hero .stat-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-width:120px;flex:1 1 140px}
+.stat .n{font-family:var(--font-mono);font-size:1.3rem;font-weight:600}
+.stat .l{font-size:.72rem;color:var(--muted);margin-top:2px}
+
+/* ---- stage sections on the process rail ---- */
+.stage{position:relative;padding:34px 0 34px 36px;border-left:2px solid var(--rail);margin-left:9px}
+.stage:last-of-type{border-left-color:transparent}
+.stage .pin{position:absolute;left:-11px;top:38px;width:20px;height:20px;border-radius:50%;
+  background:var(--accent);border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:.62rem;color:var(--accent-ink);font-weight:700}
+.stage .tag{display:inline-block;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--accent);background:color-mix(in srgb, var(--accent) 14%, transparent);
+  padding:3px 8px;border-radius:5px;margin-bottom:8px}
+.stage h2{font-size:1.5rem;margin-bottom:10px}
+.stage .lede{color:var(--muted);max-width:62ch;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:620px){.grid2,.grid3{grid-template-columns:1fr}}
+.mini-table{width:100%;border-collapse:collapse;font-size:.86rem}
+.mini-table th,.mini-table td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--border)}
+.mini-table th{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mini-table td.num{font-family:var(--font-mono);text-align:right}
+.mini-table tr.best td{color:var(--safety);font-weight:600}
+.chartbox{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:4px}
+.chartbox canvas{max-width:100%}
+.chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chip{font-family:var(--font-mono);font-size:.75rem;background:var(--surface-2);border:1px solid var(--border);
+  padding:4px 9px;border-radius:999px}
+.note{font-size:.85rem;color:var(--muted);margin-top:10px}
+.illus{width:100%;border-radius:12px;border:1px solid var(--border);display:block;overflow:hidden}
+
+/* ---- governance checklist ---- */
+.gov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:620px){.gov-grid{grid-template-columns:1fr}}
+.gov-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--safety);
+  border-radius:10px;padding:13px 14px}
+.gov-card h4{font-size:.92rem;margin-bottom:6px}
+.gov-card ul{margin:0;padding-left:18px;font-size:.82rem;color:var(--muted)}
+.gov-card li{margin-bottom:3px}
+.risk-banner{background:color-mix(in srgb, var(--danger) 10%, var(--surface));border:1px solid var(--danger);
+  border-radius:10px;padding:12px 14px;margin-top:14px;font-size:.88rem}
+.risk-banner b{color:var(--danger)}
+
+/* ---- forecast console ---- */
+.console{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:6px}
+.console-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.badge-live{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.06em;color:var(--safety);
+  border:1px solid var(--safety);border-radius:999px;padding:3px 9px;text-transform:uppercase}
+.row-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.row-table th{font-family:var(--font-mono);font-size:.66rem;text-transform:uppercase;color:var(--muted);
+  text-align:left;padding:5px 6px;letter-spacing:.04em}
+.row-table td{padding:3px 6px}
+.row-table input{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;
+  padding:6px 7px;color:var(--fg);font-family:var(--font-mono);font-size:.85rem}
+.row-table input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.btn{font-family:var(--font-body);font-weight:600;font-size:.92rem;background:var(--accent);color:var(--accent-ink);
+  border:none;border-radius:9px;padding:12px 20px;cursor:pointer;margin-top:14px}
+.btn:focus-visible{outline:3px solid var(--safety);outline-offset:2px}
+.btn:active{transform:translateY(1px)}
+.result{margin-top:16px;padding:16px;border-radius:12px;background:var(--surface-2);border:1px dashed var(--border)}
+.result .figure{font-family:var(--font-mono);font-size:2rem;font-weight:600}
+.result .figure small{font-size:1rem;color:var(--muted);font-weight:400}
+.result .breakdown{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;font-size:.76rem}
+@media (max-width:620px){.result .breakdown{grid-template-columns:repeat(2,1fr)}}
+.result .breakdown div{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 9px}
+.result .breakdown .k{color:var(--muted);display:block;margin-bottom:2px}
+.result .breakdown .v{font-family:var(--font-mono)}
+.scroll-x{overflow-x:auto}
+
+/* ---- downloads ---- */
+.dl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:620px){.dl-grid{grid-template-columns:1fr}}
+.dl-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-decoration:none;color:var(--fg)}
+.dl-card:hover{border-color:var(--accent)}
+.dl-card .nm{font-weight:600;font-size:.88rem}
+.dl-card .ds{font-size:.76rem;color:var(--muted);margin-top:2px}
+.dl-card .arrow{font-family:var(--font-mono);color:var(--accent);font-size:1.1rem}
+
+footer{padding:30px 0 44px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);margin-top:30px}
+footer a{color:var(--muted)}
+</style>
+
+<header class="top">
+  <nav class="navrow">
+    <span class="brand">⛽ Calgary Fuel ML</span>
+    <div class="steps">
+      <a href="#collection">Collection</a>
+      <a href="#dp1">DP1</a>
+      <a href="#dp2">DP2</a>
+      <a href="#dp3">DP3</a>
+      <a href="#modeling">Modeling</a>
+      <a href="#validation">Validation</a>
+      <a href="#governance">Governance</a>
+      <a href="#deployment">Deploy</a>
+      <a href="#downloads">Downloads</a>
+    </div>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="eyebrow">End-to-end workflow · Calgary unleaded retail price</p>
+    <h1>From daily price ticks to a working next-day forecast</h1>
+    <p class="sub">A complete, auditable pipeline for Calgary retail unleaded fuel prices — collection,
+      three data-processing stages, model selection, validation against a naive baseline, governance,
+      and a live forecasting console below, built on 1,516 recorded trading days from Jan 2021 to Oct 2026.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="n tnum">1,516</div><div class="l">recorded trading days</div></div>
+      <div class="stat"><div class="n tnum">5.91¢</div><div class="l">best model MAE (vs 6.17¢ baseline)</div></div>
+      <div class="stat"><div class="n tnum">8</div><div class="l">lag &amp; rolling features</div></div>
+      <div class="stat"><div class="n tnum">5</div><div class="l">models benchmarked</div></div>
+    </div>
+  </section>
+
+  <!-- 1. DATA COLLECTION -->
+  <section class="stage" id="collection">
+    <div class="pin">1</div>
+    <span class="tag">Data Collection</span>
+    <h2>Daily retail price ticks, business days only</h2>
+    <p class="lede">The source file records Calgary unleaded retail price for every trading day from
+      1 Jan 2021 to 23 Oct 2026 — no entries on weekends, so the series follows the market's own
+      posting calendar rather than the full civil calendar.</p>
+    <div class="grid2">
+      <div class="card">
+        <table class="mini-table">
+          <tr><th>Field</th><th>Description</th></tr>
+          <tr><td class="mono">Dates</td><td>MM/DD/YYYY, one row per trading day</td></tr>
+          <tr><td class="mono">Unleaded</td><td>Retail price, as recorded</td></tr>
+        </table>
+        <p class="note">Range: 1 Jan 2021 → 23 Oct 2026 &nbsp;·&nbsp; 1,516 rows &nbsp;·&nbsp; 0 duplicate dates &nbsp;·&nbsp; 0 missing values</p>
+      </div>
+      <svg class="illus" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fuel pump nozzle feeding a data stream into a ledger">
+        <rect width="400" height="220" fill="var(--surface-2)"/>
+        <rect x="0" y="0" width="400" height="220" fill="none"/>
+        <g transform="translate(40,40)">
+          <rect x="0" y="0" width="54" height="120" rx="6" fill="var(--accent)"/>
+          <rect x="10" y="12" width="34" height="46" rx="3" fill="var(--surface)"/>
+          <text x="27" y="40" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="var(--accent)">167.5</text>
+          <path d="M54 70 C 100 70, 100 110, 150 110" stroke="var(--accent)" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <circle cx="150" cy="110" r="5" fill="var(--accent)"/>
+        </g>
+        <g transform="translate(200,30)" font-family="IBM Plex Mono" font-size="10" fill="var(--muted)">
+          <rect x="0" y="0" width="160" height="140" rx="8" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="12" y="20" fill="var(--fg)" font-weight="700">ledger.csv</text>
+          <line x1="12" y1="30" x2="148" y2="30" stroke="var(--border)"/>
+          <text x="12" y="48">10/21/2026  156.2</text>
+          <text x="12" y="64">10/22/2026  167.5</text>
+          <text x="12" y="80">10/23/2026  167.5</text>
+          <text x="12" y="98" fill="var(--rail)">10/24/2026  —</text>
+          <text x="12" y="112" fill="var(--rail)" font-size="9">(weekend, no entry)</text>
+          <text x="12" y="130">10/26/2026  …</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 2. DP1 -->
+  <section class="stage" id="dp1">
+    <div class="pin">2</div>
+    <span class="tag">DP1 · Cleaning &amp; Quality Checks</span>
+    <h2>Verify before trusting a single row</h2>
+    <p class="lede">No weekend data was invented. Cleaning only parsed, sorted and checked what was
+      actually recorded — gaps from weekends were left as gaps, not filled.</p>
+    <div class="card">
+      <table class="mini-table">
+        <tr><th>Check</th><th>Result</th></tr>
+        <tr><td>Dates parsed (MM/DD/YYYY)</td><td class="num">1,516 / 1,516 parsed</td></tr>
+        <tr><td>Duplicate dates</td><td class="num">0 removed</td></tr>
+        <tr><td>Non-positive / missing prices</td><td class="num">0 removed</td></tr>
+        <tr><td>Rows kept</td><td class="num">1,516</td></tr>
+        <tr><td>Added fields</td><td class="num">day_of_week, gap_days</td></tr>
+      </table>
+      <p class="note">Output: <code>cleaned_data.csv</code> — sorted chronologically with the real recorded calendar intact.</p>
+    </div>
+  </section>
+
+  <!-- 3. DP2 -->
+  <section class="stage" id="dp2">
+    <div class="pin">3</div>
+    <span class="tag">DP2 · Feature Engineering</span>
+    <h2>Lag and rolling features, chosen from the data's own autocorrelation</h2>
+    <p class="lede">Price levels stay highly correlated out to lag 10 (0.88+); day-over-day changes show
+      momentum at lag 1 and reversal at lag 2 before fading to noise — so the feature set spans both signals
+      without reaching past where that signal decays.</p>
+    <div class="grid2">
+      <div class="card">
+        <table class="mini-table">
+          <tr><th>Lag (days back)</th><th>Price-level correlation</th></tr>
+          <tr><td>1</td><td class="num">0.987</td></tr>
+          <tr><td>2</td><td class="num">0.969</td></tr>
+          <tr><td>3</td><td class="num">0.956</td></tr>
+          <tr><td>5</td><td class="num">0.937</td></tr>
+          <tr><td>10</td><td class="num">0.883</td></tr>
+          <tr><td>20</td><td class="num">0.772</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <p class="eyebrow" style="margin-bottom:8px">Selected features (window: 5 trading days)</p>
+        <div class="chip-list">
+          <span class="chip">lag_1</span><span class="chip">lag_2</span><span class="chip">lag_3</span>
+          <span class="chip">lag_5</span><span class="chip">lag_10</span><span class="chip">diff_1</span>
+          <span class="chip">roll_mean_5</span><span class="chip">roll_std_5</span>
+        </div>
+        <p class="note">Target: <code>target_next_price</code> — the next <em>recorded</em> day's price, never an invented weekend row. Every feature uses information strictly before the predicted day.</p>
+      </div>
+    </div>
+    <p class="note">Output: <code>lag_features.csv</code> — 1,505 rows (11 dropped: 10 for insufficient lag history, 1 for no next-day target).</p>
+  </section>
+
+  <!-- 4. DP3 -->
+  <section class="stage" id="dp3">
+    <div class="pin">4</div>
+    <span class="tag">DP3 · Standardization &amp; Split</span>
+    <h2>Scale on the past only, split on time, never shuffle</h2>
+    <p class="lede">Each feature was standardized ((value − mean) ÷ std) using statistics from the
+      training rows alone, then applied unchanged to validation — fitting on the full series would leak
+      future information into training.</p>
+    <div class="grid2">
+      <div class="card">
+        <p class="eyebrow" style="margin-bottom:8px">Chronological split</p>
+        <table class="mini-table">
+          <tr><td>Training</td><td class="num">15 Jan 2021 → 27 Aug 2025</td></tr>
+          <tr><td>Validation</td><td class="num">28 Aug 2025 → 22 Oct 2026</td></tr>
+          <tr><td>Split ratio</td><td class="num">80 / 20, no shuffling</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <p class="eyebrow" style="margin-bottom:8px">Why no shuffling</p>
+        <p style="font-size:.88rem;color:var(--muted)">This is a time series: shuffling would let a model
+          train on days after the ones it's tested on — something it could never see in real use. Validation
+          deliberately covers the most recent, most volatile 14 months, including the sharp 2026 jumps.</p>
+      </div>
+    </div>
+    <p class="note">Outputs: <code>train_data.csv</code> (1,204 rows) and <code>validation_data.csv</code> (301 rows).</p>
+  </section>
+
+  <!-- 5. MODELING -->
+  <section class="stage" id="modeling">
+    <div class="pin">5</div>
+    <span class="tag">Modeling</span>
+    <h2>Four models, one honest benchmark</h2>
+    <p class="lede">Each model targets a different pattern found in the data — a near-random-walk level,
+      non-linear jump/reversal structure, and the risk of overfitting daily noise.</p>
+    <div class="grid2">
+      <div class="card">
+        <table class="mini-table">
+          <tr><th>Model</th><th>Reason selected</th></tr>
+          <tr><td>Previous-Price Baseline</td><td>Naive benchmark — any model must beat "tomorrow = today"</td></tr>
+          <tr><td>Linear Regression</td><td>Lag_1 correlates ~0.99 with next price — a near-linear relationship</td></tr>
+          <tr><td>Decision Tree</td><td>Captures the jump/reversal thresholds a straight line can't</td></tr>
+          <tr><td>Random Forest</td><td>Averages many trees to steady a single tree's overfitting</td></tr>
+          <tr><td>Gradient Boosting</td><td>Targets residual errors round by round, tuned shallow against overfitting</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <p class="eyebrow" style="margin-bottom:8px">Alternatives considered</p>
+        <ul style="margin:0;padding-left:18px;font-size:.86rem;color:var(--muted)">
+          <li><b style="color:var(--fg)">Ridge / Lasso</b> — regularizes correlated lag features</li>
+          <li><b style="color:var(--fg)">ARIMA / exponential smoothing</b> — built for serial dependence; a second baseline</li>
+          <li><b style="color:var(--fg)">XGBoost / LightGBM</b> — faster, often stronger boosting if more accuracy is needed</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">All five artifacts (including the baseline) were trained on <code>train_data.csv</code> and saved for reuse.</p>
+  </section>
+
+  <!-- 6. VALIDATION -->
+  <section class="stage" id="validation">
+    <div class="pin">6</div>
+    <span class="tag">Validation</span>
+    <h2>Measured against 301 held-out days the models never trained on</h2>
+    <p class="lede">Linear Regression has the lowest error on every metric but RMSE, edging out the
+      baseline — evidence the series is close to a random walk, where "today's price" is already a strong
+      predictor and the extra features add a modest, real improvement.</p>
+    <div class="card">
+      <table class="mini-table" id="metricsTable">
+        <tr><th>Model</th><th>MAE</th><th>RMSE</th><th>MedAE</th><th>RMSLE</th></tr>
+      </table>
+    </div>
+    <div class="chartbox"><canvas id="maeChart" height="160"></canvas></div>
+    <div class="chartbox" style="margin-top:14px"><canvas id="predChart" height="220"></canvas></div>
+    <p class="note">Recommendation: <b style="color:var(--fg)">Linear Regression</b> — MAE 5.91¢/L vs. 6.17¢/L for the baseline.
+      All models lag slightly behind the actual price during sharp jumps (e.g. early Oct 2026), since every
+      feature is built from past prices only.</p>
+  </section>
+
+  <!-- 7. GOVERNANCE -->
+  <section class="stage" id="governance">
+    <div class="pin">7</div>
+    <span class="tag">AI Governance</span>
+    <h2>Checklist before this model informs a decision</h2>
+    <div class="gov-grid">
+      <div class="gov-card"><h4>Data quality</h4><ul>
+        <li>Validate date format &amp; units on every refresh</li>
+        <li>Check gaps, duplicates, non-positive prices</li>
+        <li>Re-run autocorrelation checks periodically</li>
+      </ul></div>
+      <div class="gov-card"><h4>Leakage</h4><ul>
+        <li>Features use only pre-prediction information</li>
+        <li>Scaler mean/std fixed from training only</li>
+        <li>Chronological split preserved on every retrain</li>
+      </ul></div>
+      <div class="gov-card"><h4>Licensing</h4><ul>
+        <li>Confirm usage terms for the price data source</li>
+        <li>Record source &amp; attribution with the model files</li>
+      </ul></div>
+      <div class="gov-card"><h4>Market changes</h4><ul>
+        <li>Supply shocks, tax/policy shifts trigger review</li>
+        <li>Flag high-volatility periods as lower confidence</li>
+      </ul></div>
+      <div class="gov-card"><h4>Monitoring</h4><ul>
+        <li>Track rolling MAE/RMSE vs. the baseline threshold</li>
+        <li>Watch feature drift vs. training distribution</li>
+        <li>Log every prediction with inputs &amp; model version</li>
+      </ul></div>
+      <div class="gov-card"><h4>Human review</h4><ul>
+        <li>A person reviews forecasts before any purchasing or pricing action</li>
+        <li>Large/anomalous predictions flagged for manual check</li>
+        <li>Review each quarter, and after any market shock</li>
+      </ul></div>
+    </div>
+    <div class="risk-banner"><b>Key risk:</b> the model cannot anticipate sudden jumps — it is built only
+      from past prices. <b>Mitigation:</b> treat every forecast as a planning input a human reviews, never
+      an autonomous trigger, with a wider safety margin during known volatility.</div>
+  </section>
+
+  <!-- 8. DEPLOYMENT -->
+  <section class="stage" id="deployment">
+    <div class="pin">8</div>
+    <span class="tag">Deployment</span>
+    <h2>Live forecasting console</h2>
+    <p class="lede">Enter the last 10 recorded trading-day prices (oldest to newest) and the page computes
+      the same lag features used in training, standardizes them with the training-set mean and standard
+      deviation, and applies the saved Linear Regression weights — entirely in your browser.</p>
+
+    <div class="console">
+      <div class="console-head">
+        <div><strong>Next-day price forecast</strong><div class="note" style="margin-top:2px">Final model: Linear Regression · lags 1, 2, 3, 5, 10</div></div>
+        <span class="badge-live">Example data loaded</span>
+      </div>
+      <div class="scroll-x">
+        <table class="row-table" id="inputTable">
+          <tr><th style="width:40%">Date</th><th>Price (¢/L)</th></tr>
+        </table>
+      </div>
+      <button class="btn" id="predictBtn" type="button">Predict next-day price</button>
+      <div class="result" id="resultBox" hidden>
+        <p class="eyebrow">Predicted next recorded-day price</p>
+        <div class="figure"><span id="predValue">—</span><small> ¢/L</small></div>
+        <p class="note" id="predDateNote"></p>
+        <div class="breakdown" id="breakdown"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOADS -->
+  <section class="stage" id="downloads" style="border-left-color:transparent">
+    <div class="pin" style="background:var(--safety)">↓</div>
+    <span class="tag" style="color:var(--safety);background:color-mix(in srgb, var(--safety) 14%, transparent)">Downloads</span>
+    <h2>All generated files</h2>
+    <p class="lede">Every CSV produced across the workflow, ready to open in a spreadsheet or load back into Python.</p>
+    <div class="dl-grid">
+      <a class="dl-card" href="cleaned_data.csv" target="_blank" rel="noopener"><div><div class="nm">cleaned_data.csv</div><div class="ds">1,516 rows · verified, no invented weekends</div></div><span class="arrow">↓</span></a>
+      <a class="dl-card" href="lag_features.csv" target="_blank" rel="noopener"><div><div class="nm">lag_features.csv</div><div class="ds">1,505 rows · 8 lag/rolling features + target</div></div><span class="arrow">↓</span></a>
+      <a class="dl-card" href="train_data.csv" target="_blank" rel="noopener"><div><div class="nm">train_data.csv</div><div class="ds">1,204 rows · standardized, Jan 2021–Aug 2025</div></div><span class="arrow">↓</span></a>
+      <a class="dl-card" href="validation_data.csv" target="_blank" rel="noopener"><div><div class="nm">validation_data.csv</div><div class="ds">301 rows · standardized, Aug 2025–Oct 2026</div></div><span class="arrow">↓</span></a>
+      <a class="dl-card" href="validation_metrics.csv" target="_blank" rel="noopener"><div><div class="nm">validation_metrics.csv</div><div class="ds">MAE / RMSE / MedAE / RMSLE, all 5 models</div></div><span class="arrow">↓</span></a>
+      <a class="dl-card" href="validation_predictions.csv" target="_blank" rel="noopener"><div><div class="nm">validation_predictions.csv</div><div class="ds">Actual vs. every model's prediction, by date</div></div><span class="arrow">↓</span></a>
+    </div>
+  </section>
+
+  <footer>
+    Calgary unleaded retail price workflow · built on 1,516 recorded trading days, Jan 2021–Oct 2026 ·
+    forecasts are a planning input, not a trading or purchasing instruction — see Governance above.
+  </footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const CHART_DATA = {"history": {"date": ["2021-01-01", "2021-01-06", "2021-01-11", "2021-01-14", "2021-01-19", "2021-01-22", "2021-01-27", "2021-02-01", "2021-02-04", "2021-02-09", "2021-02-12", "2021-02-17", "2021-02-22", "2021-02-25", "2021-03-02", "2021-03-05", "2021-03-10", "2021-03-15", "2021-03-18", "2021-03-23", "2021-03-26", "2021-03-31", "2021-04-05", "2021-04-08", "2021-04-13", "2021-04-16", "2021-04-21", "2021-04-26", "2021-04-29", "2021-05-04", "2021-05-07", "2021-05-12", "2021-05-17", "2021-05-20", "2021-05-25", "2021-05-28", "2021-06-02", "2021-06-07", "2021-06-10", "2021-06-15", "2021-06-18", "2021-06-23", "2021-06-28", "2021-07-01", "2021-07-06", "2021-07-09", "2021-07-14", "2021-07-19", "2021-07-22", "2021-07-27", "2021-07-30", "2021-08-04", "2021-08-09", "2021-08-12", "2021-08-17", "2021-08-20", "2021-08-25", "2021-08-30", "2021-09-02", "2021-09-07", "2021-09-10", "2021-09-15", "2021-09-20", "2021-09-23", "2021-09-28", "2021-10-01", "2021-10-06", "2021-10-11", "2021-10-14", "2021-10-19", "2021-10-22", "2021-10-27", "2021-11-01", "2021-11-04", "2021-11-09", "2021-11-12", "2021-11-17", "2021-11-22", "2021-11-25", "2021-11-30", "2021-12-03", "2021-12-08", "2021-12-13", "2021-12-16", "2021-12-21", "2021-12-24", "2021-12-29", "2022-01-03", "2022-01-06", "2022-01-11", "2022-01-14", "2022-01-19", "2022-01-24", "2022-01-27", "2022-02-01", "2022-02-04", "2022-02-09", "2022-02-14", "2022-02-17", "2022-02-22", "2022-02-25", "2022-03-02", "2022-03-07", "2022-03-10", "2022-03-15", "2022-03-18", "2022-03-23", "2022-03-28", "2022-03-31", "2022-04-05", "2022-04-08", "2022-04-13", "2022-04-18", "2022-04-21", "2022-04-26", "2022-04-29", "2022-05-04", "2022-05-09", "2022-05-12", "2022-05-17", "2022-05-20", "2022-05-25", "2022-05-30", "2022-06-02", "2022-06-07", "2022-06-10", "2022-06-15", "2022-06-20", "2022-06-23", "2022-06-28", "2022-07-01", "2022-07-06", "2022-07-11", "2022-07-14", "2022-07-19", "2022-07-22", "2022-07-27", "2022-08-01", "2022-08-04", "2022-08-09", "2022-08-12", "2022-08-17", "2022-08-22", "2022-08-25", "2022-08-30", "2022-09-02", "2022-09-07", "2022-09-12", "2022-09-15", "2022-09-20", "2022-09-23", "2022-09-28", "2022-10-03", "2022-10-06", "2022-10-11", "2022-10-14", "2022-10-19", "2022-10-24", "2022-10-27", "2022-11-01", "2022-11-04", "2022-11-09", "2022-11-14", "2022-11-17", "2022-11-22", "2022-11-25", "2022-11-30", "2022-12-05", "2022-12-08", "2022-12-13", "2022-12-16", "2022-12-21", "2022-12-26", "2022-12-29", "2023-01-03", "2023-01-06", "2023-01-11", "2023-01-16", "2023-01-19", "2023-01-24", "2023-01-27", "2023-02-01", "2023-02-06", "2023-02-09", "2023-02-14", "2023-02-17", "2023-02-22", "2023-02-27", "2023-03-02", "2023-03-07", "2023-03-10", "2023-03-15", "2023-03-20", "2023-03-23", "2023-03-28", "2023-03-31", "2023-04-05", "2023-04-10", "2023-04-13", "2023-04-18", "2023-04-21", "2023-04-26", "2023-05-01", "2023-05-04", "2023-05-09", "2023-05-12", "2023-05-17", "2023-05-22", "2023-05-25", "2023-05-30", "2023-06-02", "2023-06-07", "2023-06-12", "2023-06-15", "2023-06-20", "2023-06-23", "2023-06-28", "2023-07-03", "2023-07-06", "2023-07-11", "2023-07-14", "2023-07-19", "2023-07-24", "2023-07-27", "2023-08-01", "2023-08-04", "2023-08-09", "2023-08-14", "2023-08-17", "2023-08-22", "2023-08-25", "2023-08-30", "2023-09-04", "2023-09-07", "2023-09-12", "2023-09-15", "2023-09-20", "2023-09-25", "2023-09-28", "2023-10-03", "2023-10-06", "2023-10-11", "2023-10-16", "2023-10-19", "2023-10-24", "2023-10-27", "2023-11-01", "2023-11-06", "2023-11-09", "2023-11-14", "2023-11-17", "2023-11-22", "2023-11-27", "2023-11-30", "2023-12-05", "2023-12-08", "2023-12-13", "2023-12-18", "2023-12-21", "2023-12-26", "2023-12-29", "2024-01-03", "2024-01-08", "2024-01-11", "2024-01-16", "2024-01-19", "2024-01-24", "2024-01-29", "2024-02-01", "2024-02-06", "2024-02-09", "2024-02-14", "2024-02-19", "2024-02-22", "2024-02-27", "2024-03-01", "2024-03-06", "2024-03-11", "2024-03-14", "2024-03-19", "2024-03-22", "2024-03-27", "2024-04-01", "2024-04-04", "2024-04-09", "2024-04-12", "2024-04-17", "2024-04-22", "2024-04-25", "2024-04-30", "2024-05-03", "2024-05-08", "2024-05-13", "2024-05-16", "2024-05-21", "2024-05-24", "2024-05-29", "2024-06-03", "2024-06-06", "2024-06-11", "2024-06-14", "2024-06-19", "2024-06-24", "2024-06-27", "2024-07-02", "2024-07-05", "2024-07-10", "2024-07-15", "2024-07-18", "2024-07-23", "2024-07-26", "2024-07-31", "2024-08-05", "2024-08-08", "2024-08-13", "2024-08-16", "2024-08-21", "2024-08-26", "2024-08-29", "2024-09-03", "2024-09-06", "2024-09-11", "2024-09-16", "2024-09-19", "2024-09-24", "2024-09-27", "2024-10-02", "2024-10-07", "2024-10-10", "2024-10-15", "2024-10-18", "2024-10-23", "2024-10-28", "2024-10-31", "2024-11-05", "2024-11-08", "2024-11-13", "2024-11-18", "2024-11-21", "2024-11-26", "2024-11-29", "2024-12-04", "2024-12-09", "2024-12-12", "2024-12-17", "2024-12-20", "2024-12-25", "2024-12-30", "2025-01-02", "2025-01-07", "2025-01-10", "2025-01-15", "2025-01-20", "2025-01-23", "2025-01-28", "2025-01-31", "2025-02-05", "2025-02-10", "2025-02-13", "2025-02-18", "2025-02-21", "2025-02-26", "2025-03-03", "2025-03-06", "2025-03-11", "2025-03-14", "2025-03-19", "2025-03-24", "2025-03-27", "2025-04-01", "2025-04-04", "2025-04-09", "2025-04-14", "2025-04-17", "2025-04-22", "2025-04-25", "2025-04-30", "2025-05-05", "2025-05-08", "2025-05-13", "2025-05-16", "2025-05-21", "2025-05-26", "2025-05-29", "2025-06-03", "2025-06-06", "2025-06-11", "2025-06-16", "2025-06-19", "2025-06-24", "2025-06-27", "2025-07-02", "2025-07-07", "2025-07-10", "2025-07-15", "2025-07-18", "2025-07-23", "2025-07-28", "2025-07-31", "2025-08-05", "2025-08-08", "2025-08-13", "2025-08-18", "2025-08-21", "2025-08-26", "2025-08-29", "2025-09-03", "2025-09-08", "2025-09-11", "2025-09-16", "2025-09-19", "2025-09-24", "2025-09-29", "2025-10-02", "2025-10-07", "2025-10-10", "2025-10-15", "2025-10-20", "2025-10-23", "2025-10-28", "2025-10-31", "2025-11-05", "2025-11-10", "2025-11-13", "2025-11-18", "2025-11-21", "2025-11-26", "2025-12-01", "2025-12-04", "2025-12-09", "2025-12-12", "2025-12-17", "2025-12-22", "2025-12-25", "2025-12-30", "2026-01-02", "2026-01-07", "2026-01-12", "2026-01-15", "2026-01-20", "2026-01-23", "2026-01-28", "2026-02-02", "2026-02-05", "2026-02-10", "2026-02-13", "2026-02-18", "2026-02-23", "2026-02-26", "2026-03-03", "2026-03-06", "2026-03-11", "2026-03-16", "2026-03-19", "2026-03-24", "2026-03-27", "2026-04-01", "2026-04-06", "2026-04-09", "2026-04-14", "2026-04-17", "2026-04-22", "2026-04-27", "2026-04-30", "2026-05-05", "2026-05-08", "2026-05-13", "2026-05-18", "2026-05-21", "2026-05-26", "2026-05-29", "2026-06-03", "2026-06-08", "2026-06-11", "2026-06-16", "2026-06-19", "2026-06-24", "2026-06-29", "2026-07-02", "2026-07-07", "2026-07-10", "2026-07-15", "2026-07-20", "2026-07-23", "2026-07-28", "2026-07-31", "2026-08-05", "2026-08-10", "2026-08-13", "2026-08-18", "2026-08-21", "2026-08-26", "2026-08-31", "2026-09-03", "2026-09-08", "2026-09-11", "2026-09-16", "2026-09-21", "2026-09-24", "2026-09-29", "2026-10-02", "2026-10-07", "2026-10-12", "2026-10-15", "2026-10-20", "2026-10-23"], "price": [100.9, 101.1, 100.7, 100.4, 100.2, 104.9, 108.8, 108.7, 108.7, 108.4, 112.9, 113.9, 113.9, 113.9, 113.9, 113.8, 118.9, 118.9, 118.9, 118.8, 118.5, 118.5, 121.1, 121.3, 121.1, 121.1, 127.8, 127.9, 127.8, 127.7, 127.7, 127.4, 127.1, 127.1, 127.2, 127.1, 127.1, 127.1, 127.1, 127.2, 133.9, 133.9, 133.9, 133.9, 133.9, 133.5, 133.5, 139.3, 137.5, 136.7, 136.4, 136.4, 136.4, 135.9, 135.2, 135.2, 134.0, 133.6, 133.6, 133.5, 133.3, 133.1, 132.5, 133.1, 132.6, 132.6, 139.4, 143.9, 142.3, 142.6, 142.0, 142.1, 142.1, 142.1, 142.4, 141.8, 141.7, 141.7, 141.7, 141.8, 140.3, 139.5, 139.5, 139.5, 139.2, 139.1, 139.0, 139.0, 139.0, 139.1, 138.9, 138.7, 138.7, 138.7, 138.9, 146.9, 146.9, 146.7, 146.5, 146.6, 146.5, 146.5, 157.2, 173.3, 167.9, 167.9, 167.9, 167.9, 167.9, 155.4, 155.3, 155.3, 155.3, 155.3, 155.2, 154.9, 163.0, 163.8, 163.7, 171.9, 171.9, 171.8, 171.5, 179.9, 189.9, 191.9, 191.9, 191.9, 191.9, 191.5, 191.9, 190.7, 189.9, 188.2, 182.0, 180.9, 171.1, 169.1, 162.3, 155.4, 153.0, 151.2, 147.5, 146.6, 144.6, 143.2, 142.4, 141.0, 140.2, 139.3, 142.1, 156.4, 160.7, 172.1, 171.8, 171.7, 168.4, 165.2, 163.8, 160.2, 159.4, 155.0, 152.1, 148.6, 144.2, 141.3, 135.1, 131.2, 129.2, 125.6, 122.5, 118.2, 114.9, 115.4, 129.4, 128.0, 124.5, 122.5, 134.6, 132.4, 130.8, 129.2, 126.5, 125.6, 124.0, 123.2, 120.7, 128.0, 134.1, 133.5, 132.5, 131.7, 130.2, 129.8, 127.8, 140.9, 141.1, 140.7, 147.8, 147.3, 147.7, 147.4, 146.9, 146.6, 145.5, 145.4, 144.8, 144.6, 147.3, 147.7, 146.9, 146.2, 146.0, 144.6, 143.8, 143.0, 142.6, 142.4, 141.7, 141.3, 141.1, 140.7, 139.7, 142.8, 144.4, 144.3, 144.3, 148.8, 148.9, 148.3, 146.8, 146.0, 144.8, 144.0, 143.3, 144.6, 142.5, 141.8, 141.5, 140.8, 140.2, 138.2, 137.4, 136.6, 135.5, 135.3, 133.8, 133.3, 132.8, 130.8, 130.8, 127.2, 126.5, 125.6, 124.3, 123.2, 120.4, 118.3, 116.9, 116.9, 114.3, 122.8, 120.5, 126.5, 129.9, 128.6, 127.2, 125.6, 124.9, 130.4, 136.9, 136.5, 136.2, 135.8, 138.0, 139.4, 147.8, 148.8, 147.9, 147.0, 146.0, 153.4, 158.8, 162.6, 161.7, 161.2, 158.8, 157.9, 157.6, 156.2, 155.8, 154.5, 152.8, 151.9, 151.0, 161.9, 159.9, 157.5, 156.6, 153.4, 151.5, 153.9, 153.9, 151.8, 150.2, 158.2, 156.5, 155.3, 159.0, 164.5, 162.5, 161.6, 164.6, 161.5, 157.5, 156.0, 153.5, 150.2, 147.0, 143.7, 142.2, 140.4, 138.9, 145.6, 145.5, 148.3, 151.2, 146.9, 153.4, 147.4, 145.9, 142.4, 140.4, 143.6, 139.3, 138.6, 137.2, 147.5, 147.7, 142.5, 140.2, 137.0, 133.3, 143.1, 141.4, 146.9, 141.6, 148.8, 148.5, 143.5, 148.6, 154.9, 151.5, 149.3, 146.4, 154.9, 152.3, 148.1, 155.0, 151.3, 148.5, 146.3, 143.6, 143.2, 141.4, 148.8, 153.4, 153.5, 149.5, 137.8, 135.1, 130.5, 126.8, 125.5, 126.4, 132.4, 127.5, 122.9, 129.2, 130.8, 137.9, 132.2, 135.9, 131.0, 126.6, 134.5, 129.0, 132.1, 135.3, 134.4, 130.2, 124.8, 123.2, 133.2, 129.5, 135.6, 130.3, 124.6, 134.3, 128.8, 133.4, 129.3, 128.8, 132.8, 134.0, 137.5, 130.2, 133.4, 133.5, 128.5, 136.0, 128.6, 123.9, 133.8, 123.1, 118.3, 112.7, 117.9, 132.6, 127.1, 129.6, 133.6, 126.7, 125.6, 131.1, 125.9, 119.3, 112.3, 121.5, 113.9, 123.8, 116.0, 110.6, 107.9, 113.4, 116.7, 123.3, 119.6, 127.3, 123.3, 126.9, 121.9, 115.1, 125.7, 120.0, 124.1, 114.8, 120.0, 127.8, 135.8, 149.8, 149.1, 152.9, 164.0, 171.3, 170.6, 159.9, 171.5, 166.4, 157.0, 172.3, 152.0, 159.6, 182.6, 179.2, 175.1, 182.6, 188.6, 178.9, 169.9, 162.6, 156.9, 169.2, 165.5, 161.2, 161.7, 156.5, 160.9, 157.6, 156.3, 168.0, 159.0, 171.6, 177.6, 177.8, 171.3, 163.7, 153.8, 171.9, 162.1, 174.7, 160.9, 150.1, 159.6, 158.0, 172.9, 174.8, 179.8, 172.9, 161.6, 145.9, 172.9, 168.3, 156.7, 148.9, 167.5]}, "metrics": [{"model": "Linear Regression", "MAE": 5.912, "RMSE": 7.655, "MedAE": 4.673, "RMSLE": 0.051}, {"model": "Random Forest", "MAE": 6.055, "RMSE": 7.597, "MedAE": 4.985, "RMSLE": 0.051}, {"model": "Gradient Boosting", "MAE": 6.082, "RMSE": 7.775, "MedAE": 4.881, "RMSLE": 0.052}, {"model": "Previous-Price Baseline", "MAE": 6.166, "RMSE": 7.662, "MedAE": 5.3, "RMSLE": 0.051}, {"model": "Decision Tree", "MAE": 6.375, "RMSE": 8.054, "MedAE": 5.157, "RMSLE": 0.054}], "val_preds": {"date": ["2025-08-28", "2025-08-29", "2025-09-01", "2025-09-02", "2025-09-03", "2025-09-04", "2025-09-05", "2025-09-08", "2025-09-09", "2025-09-10", "2025-09-11", "2025-09-12", "2025-09-15", "2025-09-16", "2025-09-17", "2025-09-18", "2025-09-19", "2025-09-22", "2025-09-23", "2025-09-24", "2025-09-25", "2025-09-26", "2025-09-29", "2025-09-30", "2025-10-01", "2025-10-02", "2025-10-03", "2025-10-06", "2025-10-07", "2025-10-08", "2025-10-09", "2025-10-10", "2025-10-13", "2025-10-14", "2025-10-15", "2025-10-16", "2025-10-17", "2025-10-20", "2025-10-21", "2025-10-22", "2025-10-23", "2025-10-24", "2025-10-27", "2025-10-28", "2025-10-29", "2025-10-30", "2025-10-31", "2025-11-03", "2025-11-04", "2025-11-05", "2025-11-06", "2025-11-07", "2025-11-10", "2025-11-11", "2025-11-12", "2025-11-13", "2025-11-14", "2025-11-17", "2025-11-18", "2025-11-19", "2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25", "2025-11-26", "2025-11-27", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-25", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-01", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-19", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-19", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-03", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-13", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-07-31", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07", "2026-08-10", "2026-08-11", "2026-08-12", "2026-08-13", "2026-08-14", "2026-08-17", "2026-08-18", "2026-08-19", "2026-08-20", "2026-08-21", "2026-08-24", "2026-08-25", "2026-08-26", "2026-08-27", "2026-08-28", "2026-08-31", "2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04", "2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10", "2026-09-11", "2026-09-14", "2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18", "2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-25", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-19", "2026-10-20", "2026-10-21", "2026-10-22"], "actual_price": [137.5, 137.5, 131.5, 130.2, 136.3, 139.9, 133.4, 130.8, 129.8, 133.5, 137.9, 131.6, 128.5, 136.9, 139.9, 136.0, 130.8, 130.4, 128.6, 126.1, 125.8, 123.9, 130.9, 135.9, 133.8, 129.7, 123.7, 123.1, 122.1, 120.2, 118.3, 118.3, 114.9, 112.7, 120.7, 123.9, 117.9, 127.1, 132.9, 132.6, 132.2, 128.6, 127.1, 124.0, 123.9, 129.6, 127.8, 130.0, 133.6, 135.8, 132.5, 126.7, 124.1, 123.5, 125.6, 131.2, 133.7, 131.1, 129.7, 128.8, 125.9, 123.0, 119.9, 119.3, 116.9, 114.9, 112.3, 116.4, 120.2, 121.5, 117.2, 114.5, 113.9, 111.6, 120.0, 123.8, 118.0, 115.9, 116.0, 114.3, 113.9, 110.6, 109.7, 107.9, 107.9, 107.9, 104.2, 113.4, 118.9, 118.9, 116.7, 115.1, 114.2, 123.3, 125.9, 124.5, 119.6, 119.4, 117.1, 127.3, 129.9, 125.2, 123.3, 122.3, 122.6, 126.9, 122.0, 121.5, 121.9, 119.1, 117.7, 115.1, 122.8, 127.9, 125.7, 122.7, 119.6, 120.0, 126.8, 129.5, 124.1, 124.1, 116.4, 114.8, 113.1, 126.5, 120.0, 119.5, 118.5, 127.8, 129.2, 125.1, 135.8, 139.9, 139.5, 149.8, 151.1, 150.4, 149.1, 145.1, 154.9, 152.9, 157.8, 166.9, 164.0, 161.7, 160.0, 171.3, 175.7, 172.2, 170.6, 165.0, 163.5, 159.9, 172.7, 172.7, 171.5, 169.8, 167.6, 166.4, 163.5, 158.3, 157.0, 167.2, 174.0, 172.3, 157.5, 153.4, 152.0, 161.0, 165.9, 159.6, 158.5, 164.0, 182.6, 185.7, 181.1, 179.2, 177.9, 176.8, 175.1, 170.9, 169.0, 182.6, 189.9, 188.6, 188.6, 184.9, 181.7, 178.9, 177.7, 172.1, 169.9, 168.7, 167.2, 162.6, 159.1, 158.0, 156.9, 158.1, 167.8, 169.2, 168.8, 167.0, 165.5, 164.7, 160.5, 161.2, 163.5, 162.9, 161.7, 158.8, 158.8, 156.5, 158.7, 162.1, 160.9, 160.5, 160.5, 157.6, 155.1, 151.7, 156.3, 166.8, 168.2, 168.0, 161.6, 160.9, 159.0, 169.6, 175.9, 171.6, 171.4, 174.1, 177.6, 183.8, 179.0, 177.8, 175.5, 173.1, 171.3, 171.3, 164.6, 163.7, 159.2, 157.2, 153.8, 152.1, 167.5, 171.9, 171.0, 166.9, 162.1, 158.8, 172.7, 174.7, 168.3, 162.1, 160.9, 156.8, 154.7, 150.1, 148.6, 152.2, 159.6, 166.9, 166.9, 158.0, 156.2, 161.6, 172.9, 168.8, 167.4, 174.8, 184.6, 184.5, 179.8, 179.0, 175.2, 172.9, 172.0, 163.3, 161.6, 159.9, 149.9, 145.9, 143.3, 150.1, 172.9, 170.9, 168.3, 168.3, 160.9, 158.5, 156.7, 156.0, 150.2, 148.9, 156.2, 167.5, 167.5], "pred_linear_regression": [138.6265964086249, 139.43415283354662, 137.3082463701297, 138.48803188581624, 131.07671957946238, 129.8487971405147, 136.49882193583437, 138.64091559636884, 132.40694634164618, 131.7742390703025, 129.70157646767746, 132.602035615083, 137.56704691733665, 130.66805557137158, 129.28841634587982, 138.0488308044617, 138.08691181625, 135.07105208643836, 131.59222685990466, 130.72766951470214, 127.23729143872798, 125.00670012281068, 125.9620396290371, 123.51825630485644, 131.43231010307102, 135.38325619809552, 132.9232502998879, 130.448053665375, 123.69280254135744, 122.46720311975538, 120.86292583835038, 119.23606804219214, 118.47233527443996, 118.4906923020646, 114.33562918664504, 112.58162130220182, 121.67781264130066, 123.06776070474604, 117.1844652715826, 129.59998450449575, 132.72135993942965, 131.42525590549334, 133.4181563818631, 129.39221635041585, 127.46388298980064, 123.59652427320374, 123.57302330076708, 130.13800127604392, 126.99859074484, 130.7139426426775, 134.4885578359201, 135.60599909932472, 132.55453693571195, 126.94548738588853, 124.12370712570817, 122.50740910209, 124.8600803820212, 131.34703470621733, 133.39362085912023, 131.0515496620751, 130.6676238748978, 129.25194204252887, 125.32642167817468, 122.75468907791824, 119.47255359097348, 118.8622206852231, 116.14676112914862, 114.49342679793384, 112.11406911176935, 116.84726009057914, 120.13523596510022, 121.33512720318664, 117.65081405017963, 115.49432148890084, 114.24528935254746, 110.868169734065, 120.98475695278076, 123.4689006877822, 117.29365720746996, 117.54183758177577, 116.6294462701506, 113.38735216611468, 114.3612421757434, 110.80893605170418, 110.12376107775914, 107.9841419398872, 107.96258363950234, 108.45798229756066, 104.2419112612506, 115.04997217927443, 118.6064998891267, 118.28365142006427, 118.00933844966268, 116.47610292918124, 114.75440868494238, 124.26982010508928, 125.31353854244765, 124.57223526851926, 120.70224905360271, 120.31737221280468, 116.5622398803654, 127.89859644017947, 129.1617416518365, 124.64387447929836, 124.91022166421396, 122.59126845806122, 122.0727530207, 127.45707148377292, 121.5264542000121, 122.52478091086816, 122.65152943405452, 118.21609999587344, 118.1270674242962, 115.13501471333892, 123.55115224050132, 127.44535136940044, 124.91116495424048, 123.83564856647092, 120.3100234820628, 119.8938956706275, 127.10500521484812, 128.92549176072282, 123.86278646762352, 125.71651766348664, 115.48215227610643, 113.9928080544808, 112.46373645666132, 126.56256957832866, 117.96353029765892, 120.18897737048408, 119.86985708363476, 127.8293639469498, 128.40246669574475, 124.9013899812358, 138.2887946073993, 139.24154264867326, 138.55747980717234, 151.6596375297497, 150.42148800282635, 150.21591872778336, 150.11774505092566, 144.8879646078472, 155.80348212018365, 151.2089877950212, 157.70225811633114, 167.53076558254776, 161.94602883075743, 161.82879253013846, 160.46019044257707, 171.16516051237792, 173.6866208874689, 170.4515799491182, 171.3003306321317, 164.0219819404353, 161.84536188863746, 157.87345131559528, 172.17259867802824, 170.12272370447806, 170.06685596094627, 170.11367312178254, 166.60453279785077, 165.29102832739562, 162.05044623092334, 156.5025089269366, 155.83665682544725, 166.448704377277, 171.53644969613396, 170.210905709193, 156.09917757293854, 152.8798761630639, 148.84017953334822, 157.95408108114026, 163.97199694985198, 157.75839034825498, 159.24276345059326, 164.10837709318054, 180.99131283539435, 182.21225509185965, 179.71029238148583, 180.36157522051573, 177.13454686729466, 174.9051169734543, 173.89294739583664, 169.4332912823969, 167.7735485860853, 182.06915637452212, 186.70809444464484, 185.95445986421348, 188.7734898998039, 184.26150259976947, 180.1389290963937, 177.2092883407208, 175.68192461197052, 169.6107578919719, 168.04690334088912, 166.70091929543975, 164.7899327163532, 160.5746786563583, 157.42529016170016, 156.31077976077702, 154.82806938841532, 156.97856739043374, 167.39067625469292, 167.184958153467, 167.93326763816032, 167.17424633222902, 165.12737976852546, 163.9990854808429, 159.02865552037048, 160.64298937346652, 162.80324117574196, 161.5347085002672, 161.3531691881701, 158.285100933869, 158.19922909309594, 155.25426324893124, 158.1483577961625, 161.68617804634056, 159.79257680314598, 160.47563969450945, 160.56479032231852, 156.64390902742466, 154.41364481507802, 150.57425178960693, 155.8091355424428, 165.88558337757777, 165.84036422262037, 167.52122684638425, 161.40169831795328, 160.59726080677157, 157.52765935885245, 168.8775059734282, 174.19827130129315, 169.50669414676707, 172.0507883574992, 174.2353419492301, 176.2454528260978, 183.02379537102595, 177.43143350502706, 177.87207172222958, 174.9308481226695, 170.94302229031013, 169.9198079420711, 169.9920092358767, 162.25036364046662, 162.531187565453, 156.92784638950624, 154.82968897934228, 151.99900544575218, 150.23186012813744, 167.3355104254643, 168.78603835885696, 169.08773336449337, 167.2552977498566, 161.47528421078474, 157.17361301811778, 172.24462627946318, 171.67270409988993, 166.3950761763132, 162.43660678707292, 159.60097589587602, 153.53164328051625, 152.5766316110666, 148.33133066703076, 147.05951736061297, 151.28988827123024, 158.32341749017286, 165.5090561206622, 165.6159416339435, 157.22399840706524, 156.63030204411407, 160.78367439250422, 170.99150706928296, 166.27178937051158, 167.62644667517134, 175.89073907853532, 182.78428554909863, 182.05973857386056, 179.25198969318996, 179.5697267704703, 173.44727338711763, 170.84186380477058, 170.65226443395085, 160.31054189216877, 160.0527752097771, 157.56415060895876, 145.65333062406637, 144.02383454881377, 140.65987687673126, 147.91090303791975, 171.64654182214326, 166.20115448473442, 167.68561106129525, 169.74087723596145, 158.6164511342349, 157.3093072573463, 155.26496094877044, 153.99396987816763, 148.49095377564197, 147.83762508457107, 155.73357338840995], "pred_previous_price_baseline": [137.5, 139.9, 137.5, 137.5, 131.5, 130.2, 136.3, 139.9, 133.4, 130.8, 129.8, 133.5, 137.9, 131.6, 128.5, 136.9, 139.9, 136.0, 130.8, 130.4, 128.6, 126.1, 125.8, 123.9, 130.9, 135.9, 133.8, 129.7, 123.7, 123.1, 122.1, 120.2, 118.3, 118.3, 114.9, 112.7, 120.7, 123.9, 117.9, 127.1, 132.9, 132.6, 132.2, 128.6, 127.1, 124.0, 123.9, 129.6, 127.8, 130.0, 133.6, 135.8, 132.5, 126.7, 124.1, 123.5, 125.6, 131.2, 133.7, 131.1, 129.7, 128.8, 125.9, 123.0, 119.9, 119.3, 116.9, 114.9, 112.3, 116.4, 120.2, 121.5, 117.2, 114.5, 113.9, 111.6, 120.0, 123.8, 118.0, 115.9, 116.0, 114.3, 113.9, 110.6, 109.7, 107.9, 107.9, 107.9, 104.2, 113.4, 118.9, 118.9, 116.7, 115.1, 114.2, 123.3, 125.9, 124.5, 119.6, 119.4, 117.1, 127.3, 129.9, 125.2, 123.3, 122.3, 122.6, 126.9, 122.0, 121.5, 121.9, 119.1, 117.7, 115.1, 122.8, 127.9, 125.7, 122.7, 119.6, 120.0, 126.8, 129.5, 124.1, 124.1, 116.4, 114.8, 113.1, 126.5, 120.0, 119.5, 118.5, 127.8, 129.2, 125.1, 135.8, 139.9, 139.5, 149.8, 151.1, 150.4, 149.1, 145.1, 154.9, 152.9, 157.8, 166.9, 164.0, 161.7, 160.0, 171.3, 175.7, 172.2, 170.6, 165.0, 163.5, 159.9, 172.7, 172.7, 171.5, 169.8, 167.6, 166.4, 163.5, 158.3, 157.0, 167.2, 174.0, 172.3, 157.5, 153.4, 152.0, 161.0, 165.9, 159.6, 158.5, 164.0, 182.6, 185.7, 181.1, 179.2, 177.9, 176.8, 175.1, 170.9, 169.0, 182.6, 189.9, 188.6, 188.6, 184.9, 181.7, 178.9, 177.7, 172.1, 169.9, 168.7, 167.2, 162.6, 159.1, 158.0, 156.9, 158.1, 167.8, 169.2, 168.8, 167.0, 165.5, 164.7, 160.5, 161.2, 163.5, 162.9, 161.7, 158.8, 158.8, 156.5, 158.7, 162.1, 160.9, 160.5, 160.5, 157.6, 155.1, 151.7, 156.3, 166.8, 168.2, 168.0, 161.6, 160.9, 159.0, 169.6, 175.9, 171.6, 171.4, 174.1, 177.6, 183.8, 179.0, 177.8, 175.5, 173.1, 171.3, 171.3, 164.6, 163.7, 159.2, 157.2, 153.8, 152.1, 167.5, 171.9, 171.0, 166.9, 162.1, 158.8, 172.7, 174.7, 168.3, 162.1, 160.9, 156.8, 154.7, 150.1, 148.6, 152.2, 159.6, 166.9, 166.9, 158.0, 156.2, 161.6, 172.9, 168.8, 167.4, 174.8, 184.6, 184.5, 179.8, 179.0, 175.2, 172.9, 172.0, 163.3, 161.6, 159.9, 149.9, 145.9, 143.3, 150.1, 172.9, 170.9, 168.3, 168.3, 160.9, 158.5, 156.7, 156.0, 150.2, 148.9, 156.2]}};
+const MODEL_PARAMS = {"feature_order": ["lag_1", "lag_2", "lag_3", "lag_5", "lag_10", "diff_1", "roll_mean_5", "roll_std_5"], "means": {"lag_1": 142.010797, "lag_2": 141.98289, "lag_3": 141.954485, "lag_5": 141.897176, "lag_10": 141.782392, "diff_1": 0.027907, "roll_mean_5": 141.953787, "roll_std_5": 1.451299}, "stds": {"lag_1": 15.92707, "lag_2": 15.970496, "lag_3": 16.01417, "lag_5": 16.098945, "lag_10": 16.290656, "diff_1": 2.041804, "roll_mean_5": 15.896557, "roll_std_5": 1.603531}, "coef": {"lag_1": 6.079103, "lag_2": 5.897521, "lag_3": 0.533433, "lag_5": -3.801572, "lag_10": -0.212621, "diff_1": 1.291, "roll_mean_5": 6.997395, "roll_std_5": -0.305229}, "intercept": 142.074419};
+const DEFAULT_ROWS = [{"date": "2026-10-12", "price": 168.3}, {"date": "2026-10-13", "price": 160.9}, {"date": "2026-10-14", "price": 158.5}, {"date": "2026-10-15", "price": 156.7}, {"date": "2026-10-16", "price": 156.0}, {"date": "2026-10-19", "price": 150.2}, {"date": "2026-10-20", "price": 148.9}, {"date": "2026-10-21", "price": 156.2}, {"date": "2026-10-22", "price": 167.5}, {"date": "2026-10-23", "price": 167.5}];
+
+</script>
+<script>
+(function(){
+  "use strict";
+
+  function themeColors(){
+    var cs = getComputedStyle(document.documentElement);
+    return {
+      fg: cs.getPropertyValue('--fg').trim() || '#1b2420',
+      muted: cs.getPropertyValue('--muted').trim() || '#5c6660',
+      border: cs.getPropertyValue('--border').trim() || '#ddd4c0',
+      accent: cs.getPropertyValue('--accent').trim() || '#c75a1f',
+      safety: cs.getPropertyValue('--safety').trim() || '#1f6e5c',
+      surface: cs.getPropertyValue('--surface').trim() || '#ffffff'
+    };
+  }
+  var C = themeColors();
+  if (window.Chart){ Chart.defaults.color = C.muted; Chart.defaults.font.family = "IBM Plex Mono"; Chart.defaults.font.size = 10; }
+
+  // ---------- metrics table ----------
+  try{
+    var tbl = document.getElementById('metricsTable');
+    var best = CHART_DATA.metrics.reduce(function(a,b){return b.MAE < a.MAE ? b : a;});
+    CHART_DATA.metrics.forEach(function(m){
+      var tr = document.createElement('tr');
+      if (m.model === best.model) tr.className = 'best';
+      tr.innerHTML = '<td>'+m.model+(m.model===best.model?' ★':'')+'</td>'+
+        '<td class="num">'+m.MAE.toFixed(2)+'</td><td class="num">'+m.RMSE.toFixed(2)+'</td>'+
+        '<td class="num">'+m.MedAE.toFixed(2)+'</td><td class="num">'+m.RMSLE.toFixed(3)+'</td>';
+      tbl.appendChild(tr);
+    });
+  }catch(e){ console.error('metrics table', e); }
+
+  // ---------- MAE bar chart ----------
+  try{
+    var ctx1 = document.getElementById('maeChart').getContext('2d');
+    var labels = CHART_DATA.metrics.map(function(m){return m.model;});
+    var maes = CHART_DATA.metrics.map(function(m){return m.MAE;});
+    var colors = CHART_DATA.metrics.map(function(m){return m.model==='Linear Regression'?C.accent:C.border;});
+    new Chart(ctx1, {
+      type:'bar',
+      data:{labels:labels, datasets:[{label:'MAE (¢/L)', data:maes, backgroundColor:colors, borderRadius:6}]},
+      options:{
+        plugins:{legend:{display:false}, title:{display:true, text:'Validation MAE by model (lower is better)', color:C.fg, font:{family:"IBM Plex Sans", size:13, weight:'600'}}},
+        scales:{ x:{grid:{display:false}, ticks:{color:C.fg}}, y:{beginAtZero:true, grid:{color:C.border}} }
+      }
+    });
+  }catch(e){ console.error('mae chart', e); }
+
+  // ---------- actual vs predicted line chart ----------
+  try{
+    var ctx2 = document.getElementById('predChart').getContext('2d');
+    var vp = CHART_DATA.val_preds;
+    new Chart(ctx2, {
+      type:'line',
+      data:{
+        labels: vp.date,
+        datasets:[
+          {label:'Actual', data:vp.actual_price, borderColor:C.fg, borderWidth:1.6, pointRadius:0, tension:0.15},
+          {label:'Linear Regression (final model)', data:vp.pred_linear_regression, borderColor:C.accent, borderWidth:1.6, pointRadius:0, tension:0.15},
+          {label:'Previous-price baseline', data:vp.pred_previous_price_baseline, borderColor:C.muted, borderDash:[3,3], borderWidth:1.2, pointRadius:0, tension:0}
+        ]
+      },
+      options:{
+        interaction:{mode:'index', intersect:false},
+        plugins:{legend:{labels:{color:C.fg}}, title:{display:true, text:'Validation set: actual vs. predicted next-day price', color:C.fg, font:{family:"IBM Plex Sans", size:13, weight:'600'}}},
+        scales:{ x:{ticks:{maxTicksLimit:8, color:C.muted}, grid:{display:false}}, y:{grid:{color:C.border}, ticks:{color:C.fg}} }
+      }
+    });
+  }catch(e){ console.error('pred chart', e); }
+
+  // ---------- price history sparkline removed in favor of focused charts above ----------
+
+  // ---------- forecasting console ----------
+  var rows = DEFAULT_ROWS.slice(); // oldest -> newest, 10 entries
+  var tableEl = document.getElementById('inputTable');
+
+  function renderRows(){
+    var rowsHtml = rows.map(function(r, i){
+      return '<tr>'+
+        '<td><input type="date" id="d'+i+'" value="'+r.date+'"></td>'+
+        '<td><input type="number" step="0.1" id="p'+i+'" value="'+r.price+'"></td>'+
+      '</tr>';
+    }).join('');
+    tableEl.innerHTML = '<tr><th style="width:40%">Date (oldest → newest)</th><th>Price (¢/L)</th></tr>' + rowsHtml;
+  }
+  renderRows();
+
+  function nextBusinessDate(dstr){
+    var d = new Date(dstr + 'T00:00:00');
+    var day = d.getUTCDay(); // 0 Sun .. 6 Sat
+    var add = (day === 5) ? 3 : (day === 6) ? 2 : 1;
+    d.setUTCDate(d.getUTCDate() + add);
+    return d.toISOString().slice(0,10);
+  }
+
+  function stdev(arr){
+    var m = arr.reduce(function(a,b){return a+b;},0)/arr.length;
+    var sq = arr.reduce(function(a,b){return a+(b-m)*(b-m);},0);
+    return Math.sqrt(sq/(arr.length-1));
+  }
+
+  document.getElementById('predictBtn').addEventListener('click', function(){
+    try{
+      var prices = [];
+      for (var i=0;i<10;i++){
+        var v = parseFloat(document.getElementById('p'+i).value);
+        if (isNaN(v) || v <= 0){ alert ? null : null; showError('Enter a valid positive price in every row.'); return; }
+        prices.push(v);
+      }
+      var lastDate = document.getElementById('d9').value;
+      // oldest->newest input; lag_1 = most recent = prices[9]
+      var L = prices.slice().reverse(); // L[0]=lag_1 ... L[9]=lag_10
+      var lag1=L[0], lag2=L[1], lag3=L[2], lag5=L[4], lag10=L[9];
+      var diff1 = lag1 - lag2;
+      var window5 = L.slice(0,5);
+      var rollMean5 = window5.reduce(function(a,b){return a+b;},0)/5;
+      var rollStd5 = stdev(window5);
+
+      var feats = {lag_1:lag1, lag_2:lag2, lag_3:lag3, lag_5:lag5, lag_10:lag10,
+                   diff_1:diff1, roll_mean_5:rollMean5, roll_std_5:rollStd5};
+
+      var pred = MODEL_PARAMS.intercept;
+      var contributions = {};
+      MODEL_PARAMS.feature_order.forEach(function(k){
+        var z = (feats[k] - MODEL_PARAMS.means[k]) / MODEL_PARAMS.stds[k];
+        var contrib = MODEL_PARAMS.coef[k] * z;
+        contributions[k] = contrib;
+        pred += contrib;
+      });
+
+      document.getElementById('predValue').textContent = pred.toFixed(1);
+      var nd = lastDate ? nextBusinessDate(lastDate) : '';
+      document.getElementById('predDateNote').textContent = nd
+        ? 'Forecast for next recorded trading day: ' + nd
+        : 'Enter the most recent date to see the forecast date.';
+
+      var bd = document.getElementById('breakdown');
+      bd.innerHTML = [
+        ['lag_1 (yesterday)', lag1.toFixed(1)],
+        ['lag_2', lag2.toFixed(1)],
+        ['diff_1 (last move)', (diff1>=0?'+':'')+diff1.toFixed(1)],
+        ['roll_mean_5', rollMean5.toFixed(1)],
+        ['roll_std_5', rollStd5.toFixed(2)],
+        ['lag_10', lag10.toFixed(1)]
+      ].map(function(p){return '<div><span class="k">'+p[0]+'</span><span class="v">'+p[1]+'</span></div>';}).join('');
+
+      document.getElementById('resultBox').hidden = false;
+    }catch(err){
+      console.error(err);
+      showError('Could not compute a prediction — check that all 10 rows have values.');
+    }
+  });
+
+  function showError(msg){
+    var box = document.getElementById('resultBox');
+    box.hidden = false;
+    box.innerHTML = '<p style="color:var(--danger)">'+msg+'</p>';
+  }
+})();
+</script>

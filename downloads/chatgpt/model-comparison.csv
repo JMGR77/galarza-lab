@@ -1,0 +1,7 @@
+model,validation_mae_cents_per_litre,validation_rmse_cents_per_litre
+linear_regression,3.3196,4.8043
+ridge_alternative,3.3698,4.6706
+gradient_boosting,3.5182,4.8145
+previous_price_baseline,3.6531,4.9571
+random_forest,3.7337,5.0124
+decision_tree,3.7575,5.0356

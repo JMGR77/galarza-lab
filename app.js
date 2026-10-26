@@ -8,4 +8,28 @@ function render(){let term=search.value.trim().toLowerCase();let list=projects.f
 function showFilters(){let categories=['All',...new Set(projects.map(p=>p.category))];filters.replaceChildren(...categories.map(cat=>{const b=document.createElement('button');b.type='button';b.className='filter';b.textContent=cat;b.setAttribute('aria-pressed',String(cat===category));b.addEventListener('click',()=>{category=cat;showFilters();render()});return b}));}
 function view(id){const p=projects.find(p=>p.id===id);if(!p)return;const links=[['Launch application',p.appUrl],['Source repository',p.repoUrl],['Download report',p.reportUrl]].filter(x=>validUrl(x[1]));detailContent.innerHTML=`<div class="detail-kicker">${safe(p.category)} · ${safe(p.status)}</div><h2>${safe(p.title)}</h2><p>${safe(p.description)}</p><div class="tag-list">${(p.tags||[]).map(t=>`<span>${safe(t)}</span>`).join('')}</div>${links.map(([title,url])=>`<a class="btn primary" href="${safe(validUrl(url))}" target="_blank" rel="noopener noreferrer">${safe(title)} ↗</a>`).join('')}<p class="detail-note">${links.length?'Links open independently of Galarza Lab. Availability and external content may change.':'Public app, source and downloadable files have not been connected to this project yet.'}</p>`;detail.showModal();}
 grid.addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)view(b.dataset.view)});document.querySelector('#close-dialog').addEventListener('click',()=>detail.close());detail.addEventListener('click',e=>{if(e.target===detail)detail.close()});search.addEventListener('input',render);document.querySelector('#year').textContent=new Date().getFullYear();
-fetch('data/projects.json').then(r=>{if(!r.ok)throw Error('Projects could not be loaded');return r.json()}).then(data=>{if(!Array.isArray(data))throw Error('Invalid project catalogue');projects=data.filter(p=>p&&typeof p.id==='string'&&typeof p.title==='string'&&typeof p.category==='string');showFilters();render()}).catch(()=>{empty.hidden=false;empty.textContent='Project catalogue could not be loaded. Open this website through a local server or its deployed HTTPS address.'});
+// Embedded catalogue works from file:// as well as on the deployed site.
+// data/projects.json remains the editable source; regenerate the embedded copy after edits.
+function initializeCatalogue(data){
+ if(!Array.isArray(data))throw Error('Invalid project catalogue');
+ projects=data.filter(p=>p&&typeof p.id==='string'&&typeof p.title==='string'&&typeof p.category==='string');
+ showFilters();render();
+}
+function embeddedCatalogue(){
+ const node=document.getElementById('embedded-projects');
+ if(!node)throw Error('Embedded catalogue missing');
+ return JSON.parse(node.textContent);
+}
+(async()=>{
+ try{
+  // When opened directly in a browser, skip fetch because file:// blocks it.
+  if(location.protocol==='file:')return initializeCatalogue(embeddedCatalogue());
+  const response=await fetch('data/projects.json');
+  if(!response.ok)throw Error('Catalogue request failed: '+response.status);
+  initializeCatalogue(await response.json());
+ }catch(error){
+  console.warn('Using embedded project catalogue:',error);
+  try{initializeCatalogue(embeddedCatalogue());}
+  catch(fallbackError){console.error(fallbackError);empty.hidden=false;empty.textContent='Project catalogue unavailable. Verify the website files are complete.';}
+ }
+})();

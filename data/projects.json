@@ -4,7 +4,7 @@
     "title": "Gravity Pyramid Safety Game",
     "category": "Safety & Learning",
     "status": "Live link supplied",
-    "featured": true,
+    "featured": false,
     "summary": "Interactive learning game exploring safety principles through a gravity-pyramid challenge.",
     "description": "An interactive safety-learning experience. Open the existing game to explore the principles and challenges. External availability should be checked before public launch.",
     "tags": [
@@ -22,16 +22,35 @@
     "id": "pipeline-safety",
     "title": "Pipeline Safety Intelligence",
     "category": "Safety & Engineering",
-    "status": "Portfolio case study",
+    "status": "Flagship \u00b7 Live application",
     "featured": true,
-    "summary": "A data-driven workflow focused on pipeline incidents, people safety and process safety.",
-    "description": "Case study spanning data overview, cleaning, transformation, dashboarding, reporting and responsible use. Public deployment and source files are not yet attached to this Lab.",
+    "summary": "Flagship process-safety analysis and learning project with dashboards, governed evidence and practical recommendations.",
+    "description": "Public five-page Pipeline Safety Intelligence project with dataset preparation, dashboards, evidence, recommendations, and responsible-use notes. Externally hosted application.",
     "tags": [
       "Process safety",
       "Analytics",
       "Dashboard"
     ],
     "art": "pipeline",
+    "appUrl": "https://pipeline-safety-intelligence.jmgr77.chatgpt.site/",
+    "repoUrl": "",
+    "reportUrl": "",
+    "year": "2026"
+  },
+  {
+    "id": "plant-quiz",
+    "title": "Galarza Plant Quiz",
+    "category": "Educational Development",
+    "status": "Public URL pending verification",
+    "featured": false,
+    "summary": "Interactive educational plant-learning quiz hosted as a separate Cloudflare Pages project.",
+    "description": "Educational quiz project. A Cloudflare administration dashboard link is known, but the public deployment URL must be confirmed before adding a Launch link.",
+    "tags": [
+      "Education",
+      "Quiz",
+      "Learning"
+    ],
+    "art": "education",
     "appUrl": "",
     "repoUrl": "",
     "reportUrl": "",
@@ -39,16 +58,16 @@
   },
   {
     "id": "calgary-fuel",
-    "title": "Calgary Fuel Price Forecasting",
+    "title": "Calgary Fuel Intelligence \u2014 AI Forecasting Case Study",
     "category": "Data & AI",
-    "status": "Detailed case study",
-    "featured": true,
-    "summary": "Six AI-assisted approaches to Calgary fuel-price forecasting, documented with a seven-part comparative study.",
-    "description": "Dedicated case study compares ChatGPT, Google Notebook/Colab, AI Studio, Perplexity, Claude, and Gemini. Only ChatGPT workflow metrics are currently evidenced; other platforms await independent results.",
+    "status": "Live-ready prototype \u00b7 release gate",
+    "featured": false,
+    "summary": "ChatGPT-based forecasting study with five supporting AI-platform references.",
+    "description": "Primary ChatGPT DP1\u2013DP3 time-series workflow and browser forecasting console; the remaining AI implementations are supporting reference studies. Public release requires historical-data licence review.",
     "tags": [
-      "Machine learning",
+      "Featured app",
       "Forecasting",
-      "Calgary"
+      "AI comparison"
     ],
     "art": "fuel",
     "appUrl": "",

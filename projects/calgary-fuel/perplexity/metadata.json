@@ -1,0 +1,106 @@
+{
+  "features": [
+    "price",
+    "lag_1",
+    "lag_2",
+    "lag_3",
+    "lag_5",
+    "lag_10",
+    "lag_21",
+    "roll_mean_5",
+    "roll_std_5",
+    "pct_change_1",
+    "day_of_week",
+    "month"
+  ],
+  "target": "target_next_day",
+  "scaler": {
+    "price": {
+      "mean": 142.38050209205022,
+      "std": 15.517783446587464
+    },
+    "lag_1": {
+      "mean": 142.35648535564854,
+      "std": 15.547499287370615
+    },
+    "lag_2": {
+      "mean": 142.33046025104602,
+      "std": 15.577589611827912
+    },
+    "lag_3": {
+      "mean": 142.30644351464437,
+      "std": 15.607114577228097
+    },
+    "lag_5": {
+      "mean": 142.26393305439333,
+      "std": 15.66348779177389
+    },
+    "lag_10": {
+      "mean": 142.1405020920502,
+      "std": 15.866736334975627
+    },
+    "lag_21": {
+      "mean": 141.8505439330544,
+      "std": 16.324215837726758
+    },
+    "roll_mean_5": {
+      "mean": 142.33184937238494,
+      "std": 15.456522091247683
+    },
+    "roll_std_5": {
+      "mean": 1.4544664326791945,
+      "std": 1.6012887692641806
+    },
+    "pct_change_1": {
+      "mean": 0.0003030669549631594,
+      "std": 0.014791704101790561
+    },
+    "day_of_week": {
+      "mean": 2.0,
+      "std": 1.4142135623730951
+    },
+    "month": {
+      "mean": 6.329707112970711,
+      "std": 3.337638204555742
+    }
+  },
+  "train_rows": 1195,
+  "val_rows": 299,
+  "train_dates": [
+    "2021-02-01",
+    "2025-08-29"
+  ],
+  "val_dates": [
+    "2025-09-01",
+    "2026-10-22"
+  ],
+  "validation_metrics": {
+    "linear_regression": {
+      "MAE": 3.345,
+      "RMSE": 4.74
+    },
+    "decision_tree": {
+      "MAE": 3.861,
+      "RMSE": 5.206
+    },
+    "random_forest": {
+      "MAE": 3.744,
+      "RMSE": 4.961
+    },
+    "gradient_boosting": {
+      "MAE": 3.749,
+      "RMSE": 4.973
+    },
+    "baseline_previous_price": {
+      "MAE": 3.674,
+      "RMSE": 4.982
+    }
+  },
+  "sklearn_version": "1.9.1",
+  "inference": "Standardize raw features with metadata['scaler'] means/stds (training-set stats only), in the exact feature order of metadata['features']; predict c/L. Baseline: predict next recorded price = current raw price.",
+  "baseline": {
+    "rule": "next recorded price = current raw price",
+    "val_MAE": 3.674,
+    "val_RMSE": 4.982
+  }
+}
