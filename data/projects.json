@@ -1,136 +1,339 @@
 [
   {
-    "id": "gravity-pyramid",
-    "title": "Gravity Pyramid Safety Game",
-    "category": "Safety & Learning",
-    "status": "Live link supplied",
-    "featured": false,
-    "summary": "Interactive learning game exploring safety principles through a gravity-pyramid challenge.",
-    "description": "An interactive safety-learning experience. Open the existing game to explore the principles and challenges. External availability should be checked before public launch.",
-    "tags": [
-      "Safety",
-      "Interactive",
-      "Game"
-    ],
-    "art": "gravity",
-    "appUrl": "https://gravity-pyramid-safety-game.jmgr77.chatgpt.site/",
-    "repoUrl": "",
-    "reportUrl": "",
-    "year": "2026"
-  },
-  {
-    "id": "pipeline-safety",
+    "id": "pipeline",
     "title": "Pipeline Safety Intelligence",
-    "category": "Safety & Engineering",
-    "status": "Flagship · Live application",
-    "featured": true,
-    "summary": "Flagship process-safety analysis and learning project with dashboards, governed evidence and practical recommendations.",
-    "description": "Public five-page Pipeline Safety Intelligence project with dataset preparation, dashboards, evidence, recommendations, and responsible-use notes. Externally hosted application.",
-    "tags": [
-      "Process safety",
-      "Analytics",
-      "Dashboard"
+    "eyebrow": "Flagship · Process safety",
+    "cat": "Safety & Engineering",
+    "status": "Live application",
+    "summary": "An evidence-led investigation of Canadian pipeline occurrences: data preparation, interactive dashboard, 12 analytical questions and 15 recommendations.",
+    "image": "pipeline",
+    "url": "https://pipeline-safety-intelligence.jmgr77.chatgpt.site/",
+    "detail": "projects/pipeline-safety/",
+    "chips": [
+      "3,433 occurrences",
+      "TSB Canada",
+      "Process safety"
     ],
-    "art": "pipeline",
-    "appUrl": "https://pipeline-safety-intelligence.jmgr77.chatgpt.site/",
-    "repoUrl": "",
-    "reportUrl": "",
-    "year": "2026"
+    "feature": true
   },
   {
-    "id": "plant-quiz",
+    "id": "steamwise",
+    "title": "SteamWise AI",
+    "eyebrow": "Featured · AI for operations",
+    "cat": "AI & Machine Learning",
+    "status": "Project website · availability to verify",
+    "summary": "Boiler-plant fault-detection study with machine learning, engineering training resources, governance and an interactive digital experience.",
+    "image": "steamwise",
+    "url": "https://steamwise.galarza.ca/",
+    "detail": "projects/steamwise/",
+    "chips": [
+      "LBNL dataset",
+      "Fault detection",
+      "Power engineering"
+    ],
+    "feature": true
+  },
+  {
+    "id": "fuel",
+    "title": "Calgary Fuel Intelligence",
+    "eyebrow": "Featured · Forecasting",
+    "cat": "AI & Machine Learning",
+    "status": "Lab case study",
+    "summary": "One flagship ChatGPT forecasting workflow, five supporting AI approaches and a transparent comparison of model evaluation methods.",
+    "image": "fuel",
+    "url": "",
+    "detail": "projects/calgary-fuel/",
+    "chips": [
+      "Time series",
+      "Six AI approaches",
+      "Validation"
+    ],
+    "feature": true
+  },
+  {
+    "id": "gravity",
+    "title": "Gravity Pyramid Safety Game",
+    "eyebrow": "Interactive learning",
+    "cat": "Education & Learning",
+    "status": "Live application",
+    "summary": "An interactive safety-education game designed to reinforce fundamental safety concepts through exploration and feedback.",
+    "image": "gravity",
+    "url": "https://gravity-pyramid-safety-game.jmgr77.chatgpt.site/",
+    "detail": "",
+    "chips": [
+      "Safety culture",
+      "Interactive game"
+    ]
+  },
+  {
+    "id": "plant",
     "title": "Galarza Plant Quiz",
-    "category": "Educational Development",
-    "status": "Live",
-    "featured": false,
-    "summary": "Interactive educational plant-learning quiz hosted as a separate Cloudflare Pages project.",
-    "description": "Educational quiz project. A Cloudflare administration dashboard link is known, but the public deployment URL must be confirmed before adding a Launch link.",
-    "tags": [
-      "Education",
+    "eyebrow": "Educational development",
+    "cat": "Education & Learning",
+    "status": "Live application",
+    "summary": "A public plant-learning quiz that turns curiosity about nature into an accessible educational exercise.",
+    "image": "plant",
+    "url": "https://quizplants.galarza.ca/",
+    "detail": "",
+    "chips": [
+      "Nature",
       "Quiz",
       "Learning"
-    ],
-    "art": "education",
-    "appUrl": "https://quizplants.galarza.ca/",
-    "repoUrl": "",
-    "reportUrl": "",
-    "year": "2026"
-  },
-  {
-    "id": "calgary-fuel",
-    "title": "Calgary Fuel Intelligence — AI Forecasting Case Study",
-    "category": "Data & AI",
-    "status": "Live-ready prototype · release gate",
-    "featured": false,
-    "summary": "ChatGPT-based forecasting study with five supporting AI-platform references.",
-    "description": "Primary ChatGPT DP1–DP3 time-series workflow and browser forecasting console; the remaining AI implementations are supporting reference studies. Public release requires historical-data licence review.",
-    "tags": [
-      "Featured app",
-      "Forecasting",
-      "AI comparison"
-    ],
-    "art": "fuel",
-    "appUrl": "",
-    "repoUrl": "",
-    "reportUrl": "",
-    "year": "2026",
-    "pageUrl": "projects/calgary-fuel/"
-  },
-  {
-    "id": "building-energy",
-    "title": "Building Energy ML",
-    "category": "Data & AI",
-    "status": "Portfolio case study",
-    "featured": false,
-    "summary": "Energy prediction exploration comparing decision-tree methods and prepared feature sets.",
-    "description": "Building-energy machine-learning exploration with multiple preprocessing iterations and model evaluation. This page intentionally does not claim that a public app is deployed.",
-    "tags": [
-      "Energy",
-      "Modeling",
-      "Buildings"
-    ],
-    "art": "energy",
-    "appUrl": "",
-    "repoUrl": "",
-    "reportUrl": "",
-    "year": "2026"
+    ]
   },
   {
     "id": "fleet",
     "title": "Calgary Fleet Analytics",
-    "category": "Data & AI",
-    "status": "Portfolio case study",
-    "featured": false,
-    "summary": "Power BI fleet analytics using trip, vehicle and delivery-site data.",
-    "description": "Fleet-data case study covering operational KPIs and idling analysis. An external dashboard link can be added when approved for public distribution.",
-    "tags": [
+    "eyebrow": "Operational analytics",
+    "cat": "Analytics & Operations",
+    "status": "Documented case study",
+    "summary": "Fleet and delivery-site analytics exploring fuel use, vehicle activity, trip duration, distance and idle time.",
+    "image": "fleet",
+    "url": "",
+    "detail": "projects/fleet-analytics/",
+    "chips": [
       "Power BI",
-      "Fleet",
-      "KPIs"
-    ],
-    "art": "fleet",
-    "appUrl": "",
-    "repoUrl": "",
-    "reportUrl": "",
-    "year": "2026"
+      "Fleet KPIs",
+      "Operations"
+    ]
   },
   {
-    "id": "maker",
-    "title": "3D Printing & Practical Prototypes",
-    "category": "Making & Experiments",
-    "status": "Collection forming",
-    "featured": false,
-    "summary": "A space for practical prototypes, engineering designs and maker experiments.",
-    "description": "A planned gallery for selected 3D-printing and DIY work. Individual project evidence and images can be uploaded through GitHub as they become available.",
-    "tags": [
+    "id": "buildings",
+    "title": "Building Energy Analytics",
+    "eyebrow": "Building performance",
+    "cat": "Analytics & Operations",
+    "status": "Documented exploratory work",
+    "summary": "Energy-data and building-performance analysis; an exploratory initiative distinct from the SteamWise fault-detection application.",
+    "image": "buildings",
+    "url": "",
+    "detail": "projects/building-energy/",
+    "chips": [
+      "Buildings",
+      "Energy",
+      "Analytics"
+    ]
+  },
+  {
+    "id": "making",
+    "title": "3D Printing & Prototypes",
+    "eyebrow": "Practical making",
+    "cat": "Making & Experiments",
+    "status": "Workshop portfolio · illustrated",
+    "summary": "Additive manufacturing and practical 3D-printing examples, including hand-shaped prototypes and articulated mechanisms used in safety learning.",
+    "image": "3d-mechanisms",
+    "url": "",
+    "detail": "projects/3d-printing/",
+    "chips": [
       "3D printing",
-      "Prototyping",
-      "DIY"
-    ],
-    "art": "maker",
-    "appUrl": "",
-    "repoUrl": "",
-    "reportUrl": "",
-    "year": "Ongoing"
+      "Prototypes",
+      "Making"
+    ]
+  },
+  {
+    "id": "readystart",
+    "title": "ReadyStart AI",
+    "eyebrow": "Live · Operational readiness",
+    "cat": "Safety & Engineering",
+    "status": "Live application · Human review required",
+    "summary": "Document-grounded construction handover assistant for completion, commissioning, PSSR, maintenance readiness and operational handover; does not authorize safety-critical actions.",
+    "image": "pipeline",
+    "url": "https://readystart-handover-assistant.jmgr77.chatgpt.site/",
+    "detail": "projects/readystart/",
+    "chips": [
+      "Construction handover",
+      "PSSR",
+      "Human approval"
+    ]
+  },
+  {
+    "id": "stickman",
+    "title": "Stickman Studio — by Josué Galarza",
+    "eyebrow": "Creative application",
+    "cat": "Making & Experiments",
+    "status": "Live creative application · by Josué Galarza",
+    "summary": "Creative drawing, animation and playground application credited on its published site to Josué Galarza. Featured as a family creative initiative.",
+    "image": "gravity",
+    "url": "https://stickman-studio.jmgr77.chatgpt.site",
+    "detail": "projects/stickman/",
+    "chips": [
+      "Creative coding",
+      "Prototype"
+    ]
+  },
+  {
+    "id": "neon-brick",
+    "title": "Neon Brick 3D",
+    "eyebrow": "Creative 3D · Interactive",
+    "cat": "Making & Experiments",
+    "status": "App link supplied · Public access not verified",
+    "summary": "Interactive 3D creative application with a supplied app URL. Public access could not be verified independently; visitors may need permission.",
+    "image": "3d-mechanisms",
+    "url": "https://neon-brick-3d.jmgr77.chatgpt.site/",
+    "detail": "projects/neon-brick/",
+    "chips": [
+      "3D creativity",
+      "Interactive",
+      "Experimental"
+    ]
+  },
+  {
+    "id": "wardrobe",
+    "title": "My Wardrobe Stylist",
+    "eyebrow": "Consumer AI · Style assistant",
+    "cat": "AI & Machine Learning",
+    "status": "App link supplied · Sign-in may be required",
+    "summary": "Personal wardrobe-styling assistant shared as an AI application experiment. Public access currently redirects to authentication.",
+    "image": "making",
+    "url": "https://my-wardrobe-stylist.jmgr77.chatgpt.site/",
+    "detail": "projects/wardrobe-stylist/",
+    "chips": [
+      "AI assistant",
+      "Personal styling",
+      "UX"
+    ]
+  },
+  {
+    "id": "assistant",
+    "title": "AI Knowledge & Learning Assistants",
+    "eyebrow": "Conversational interfaces",
+    "cat": "Education & Learning",
+    "status": "Demonstrated tools",
+    "summary": "Experiments with project assistants, including a public SteamWise learning assistant and exploratory resume support tools.",
+    "image": "steamwise",
+    "url": "https://agent.jotform.com/01a1ce360c3870008e50a8d7d5eee222c5f1",
+    "detail": "projects/ai-assistants/",
+    "chips": [
+      "Jotform Agent",
+      "Knowledge base",
+      "Learning"
+    ]
+  },
+  {
+    "id": "structcheck",
+    "title": "StructCheckVision — Building Defect Inspector",
+    "eyebrow": "BuiltSmart · Computer vision",
+    "cat": "AI & Machine Learning",
+    "status": "Classroom prototype · Live AI Studio link",
+    "summary": "Photo-based screening of surface cracks, moisture and signs of deterioration, with documented ambiguous and false-positive tests.",
+    "image": "buildings",
+    "url": "https://ai.studio/apps/3ebec521-e3c2-44f0-a82c-9f1a2abc7007",
+    "detail": "projects/structcheck/",
+    "chips": [
+      "Defect screening",
+      "Visual inspection",
+      "Human verification"
+    ]
+  },
+  {
+    "id": "florascan",
+    "title": "FloraScan — Leaf Condition Vision",
+    "eyebrow": "BuiltSmart · Computer vision",
+    "cat": "AI & Machine Learning",
+    "status": "Classroom prototype · Live AI Studio link",
+    "summary": "Plant-leaf image analysis exploring disease indicators, healthy foliage and seasonal-colour ambiguity.",
+    "image": "plant",
+    "url": "https://ai.studio/apps/cf8a90a1-1e2d-4e2a-b914-f60de0e1add3",
+    "detail": "projects/florascan/",
+    "chips": [
+      "Plant health",
+      "Image analysis",
+      "Ambiguity testing"
+    ]
+  },
+  {
+    "id": "siteguard",
+    "title": "SITEGUARD AI — Construction Safety",
+    "eyebrow": "BuiltSmart · Safety vision",
+    "cat": "Safety & Engineering",
+    "status": "Classroom prototype · Live AI Studio link",
+    "summary": "Construction-image PPE and hazard observation prototype with reviewable findings and reporting; not an autonomous safety assurance tool.",
+    "image": "pipeline",
+    "url": "https://ai.studio/apps/80058e1b-c65d-489e-be6b-d2f54e2646e9",
+    "detail": "projects/siteguard/",
+    "chips": [
+      "Construction safety",
+      "PPE observations",
+      "Human sign-off"
+    ]
+  },
+  {
+    "id": "oil-spill",
+    "title": "Oil Spill Detection — Image Classifier",
+    "eyebrow": "BuiltSmart · Teachable Machine",
+    "cat": "AI & Machine Learning",
+    "status": "Completed classroom exercise · Coming soon for standalone app",
+    "summary": "Oil-spill versus no-oil-spill classifier trained on 246 labelled images, with held-out testing documented.",
+    "image": "pipeline",
+    "url": "",
+    "detail": "projects/oil-spill/",
+    "chips": [
+      "246 images",
+      "Classification",
+      "Environmental safety"
+    ]
+  },
+  {
+    "id": "rps-vision",
+    "title": "Rock–Paper–Scissors Vision Exercise",
+    "eyebrow": "BuiltSmart · Computer vision",
+    "cat": "Education & Learning",
+    "status": "Completed classroom exercise · Coming soon for app",
+    "summary": "Visual classification learning exercise with five correct outcomes in six documented trials.",
+    "image": "gravity",
+    "url": "",
+    "detail": "projects/rps-vision/",
+    "chips": [
+      "Image classification",
+      "5/6 tests",
+      "AI learning"
+    ]
+  },
+  {
+    "id": "safe-handy",
+    "title": "Safe-Handy AI — Construction Handover",
+    "eyebrow": "AI · Handover assistant",
+    "cat": "Safety & Engineering",
+    "status": "Prior interactive prototype · Public link pending",
+    "summary": "Construction handover support assistant previously exercised with users; public access URL and deployable files remain unavailable here.",
+    "image": "buildings",
+    "url": "",
+    "detail": "projects/safe-handy/",
+    "chips": [
+      "Construction",
+      "Handover",
+      "AI assistant"
+    ]
+  },
+  {
+    "id": "fare-ml",
+    "title": "Taxi Fare Prediction — Kaggle ML Challenge",
+    "eyebrow": "BuiltSmart · Results-backed ML case study",
+    "cat": "AI & Machine Learning",
+    "status": "Completed challenge · Reported Kaggle MAE 2.52019",
+    "summary": "Five-iteration taxi-fare regression study. A hybrid fare-formula and Random Forest fallback approach achieved a previously reported Kaggle MAE of 2.52019; local holdout findings are distinguished from the Kaggle result.",
+    "image": "fleet",
+    "url": "",
+    "detail": "projects/fare-prediction/",
+    "chips": [
+      "Kaggle MAE 2.52019",
+      "Hybrid regression",
+      "5 iterations"
+    ]
+  },
+  {
+    "id": "facilitation",
+    "title": "Facilitation — Todos Volvemos Seguros",
+    "eyebrow": "Human-centred safety · Bilingual",
+    "cat": "Safety & Engineering",
+    "status": "Workshop material · Presentation available",
+    "summary": "Corporate safety facilitation built around reflection, collaborative practice and 3D-printed learning devices.",
+    "image": "facilitation-industrial",
+    "url": "",
+    "detail": "projects/facilitation/",
+    "chips": [
+      "Facilitation",
+      "Safety culture",
+      "English + Español"
+    ]
   }
 ]
