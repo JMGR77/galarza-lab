@@ -1,0 +1,32 @@
+{
+  "counts": {
+    "cards": 21,
+    "project_card_images": 21,
+    "unique_card_images": 21,
+    "detail_pages_reassigned": 19,
+    "missing_local_img_files": 0
+  },
+  "images": {
+    "pipeline": "assets/projects/pipeline.webp",
+    "steamwise": "assets/projects/steamwise.webp",
+    "fuel": "assets/projects/fuel.webp",
+    "gravity": "assets/projects/gravity.webp",
+    "plant": "assets/projects/plant.webp",
+    "fleet": "assets/projects/fleet.webp",
+    "buildings": "assets/projects/buildings.webp",
+    "making": "assets/projects/3d-mechanisms.webp",
+    "readystart": "assets/projects/readystart.webp",
+    "stickman": "assets/projects/stickman.webp",
+    "neon-brick": "assets/projects/assistant.webp",
+    "wardrobe": "assets/projects/structcheck.webp",
+    "assistant": "assets/projects/florascan.webp",
+    "structcheck": "assets/projects/siteguard.webp",
+    "florascan": "assets/projects/oil-spill.webp",
+    "siteguard": "assets/projects/rps-vision.webp",
+    "oil-spill": "assets/projects/safe-handy.webp",
+    "rps-vision": "assets/projects/fare-ml.webp",
+    "safe-handy": "assets/projects/facilitation-industrial.webp",
+    "fare-ml": "assets/projects/neon-brick.webp",
+    "facilitation": "assets/projects/wardrobe.webp"
+  }
+}

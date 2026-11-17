@@ -120,7 +120,7 @@
     "cat": "Making & Experiments",
     "status": "Workshop portfolio · illustrated",
     "summary": "Additive manufacturing and practical 3D-printing examples, including hand-shaped prototypes and articulated mechanisms used in safety learning.",
-    "image": "3d-mechanisms",
+    "image": "making",
     "url": "",
     "detail": "projects/3d-printing/",
     "chips": [
@@ -136,7 +136,7 @@
     "cat": "Safety & Engineering",
     "status": "Live application · Human review required",
     "summary": "Document-grounded construction handover assistant for completion, commissioning, PSSR, maintenance readiness and operational handover; does not authorize safety-critical actions.",
-    "image": "pipeline",
+    "image": "readystart",
     "url": "https://readystart-handover-assistant.jmgr77.chatgpt.site/",
     "detail": "projects/readystart/",
     "chips": [
@@ -152,7 +152,7 @@
     "cat": "Making & Experiments",
     "status": "Live creative application · by Josué Galarza",
     "summary": "Creative drawing, animation and playground application credited on its published site to Josué Galarza. Featured as a family creative initiative.",
-    "image": "gravity",
+    "image": "stickman",
     "url": "https://stickman-studio.jmgr77.chatgpt.site",
     "detail": "projects/stickman/",
     "chips": [
@@ -167,7 +167,7 @@
     "cat": "Making & Experiments",
     "status": "App link supplied · Public access not verified",
     "summary": "Interactive 3D creative application with a supplied app URL. Public access could not be verified independently; visitors may need permission.",
-    "image": "3d-mechanisms",
+    "image": "neon-brick",
     "url": "https://neon-brick-3d.jmgr77.chatgpt.site/",
     "detail": "projects/neon-brick/",
     "chips": [
@@ -183,7 +183,7 @@
     "cat": "AI & Machine Learning",
     "status": "App link supplied · Sign-in may be required",
     "summary": "Personal wardrobe-styling assistant shared as an AI application experiment. Public access currently redirects to authentication.",
-    "image": "making",
+    "image": "wardrobe",
     "url": "https://my-wardrobe-stylist.jmgr77.chatgpt.site/",
     "detail": "projects/wardrobe-stylist/",
     "chips": [
@@ -199,7 +199,7 @@
     "cat": "Education & Learning",
     "status": "Demonstrated tools",
     "summary": "Experiments with project assistants, including a public SteamWise learning assistant and exploratory resume support tools.",
-    "image": "steamwise",
+    "image": "assistant",
     "url": "https://agent.jotform.com/01a1ce360c3870008e50a8d7d5eee222c5f1",
     "detail": "projects/ai-assistants/",
     "chips": [
@@ -215,7 +215,7 @@
     "cat": "AI & Machine Learning",
     "status": "Classroom prototype · Live AI Studio link",
     "summary": "Photo-based screening of surface cracks, moisture and signs of deterioration, with documented ambiguous and false-positive tests.",
-    "image": "buildings",
+    "image": "structcheck",
     "url": "https://ai.studio/apps/3ebec521-e3c2-44f0-a82c-9f1a2abc7007",
     "detail": "projects/structcheck/",
     "chips": [
@@ -231,7 +231,7 @@
     "cat": "AI & Machine Learning",
     "status": "Classroom prototype · Live AI Studio link",
     "summary": "Plant-leaf image analysis exploring disease indicators, healthy foliage and seasonal-colour ambiguity.",
-    "image": "plant",
+    "image": "florascan",
     "url": "https://ai.studio/apps/cf8a90a1-1e2d-4e2a-b914-f60de0e1add3",
     "detail": "projects/florascan/",
     "chips": [
@@ -247,7 +247,7 @@
     "cat": "Safety & Engineering",
     "status": "Classroom prototype · Live AI Studio link",
     "summary": "Construction-image PPE and hazard observation prototype with reviewable findings and reporting; not an autonomous safety assurance tool.",
-    "image": "pipeline",
+    "image": "siteguard",
     "url": "https://ai.studio/apps/80058e1b-c65d-489e-be6b-d2f54e2646e9",
     "detail": "projects/siteguard/",
     "chips": [
@@ -263,7 +263,7 @@
     "cat": "AI & Machine Learning",
     "status": "Completed classroom exercise · Coming soon for standalone app",
     "summary": "Oil-spill versus no-oil-spill classifier trained on 246 labelled images, with held-out testing documented.",
-    "image": "pipeline",
+    "image": "oil-spill",
     "url": "",
     "detail": "projects/oil-spill/",
     "chips": [
@@ -279,7 +279,7 @@
     "cat": "Education & Learning",
     "status": "Completed classroom exercise · Coming soon for app",
     "summary": "Visual classification learning exercise with five correct outcomes in six documented trials.",
-    "image": "gravity",
+    "image": "rps-vision",
     "url": "",
     "detail": "projects/rps-vision/",
     "chips": [
@@ -295,7 +295,7 @@
     "cat": "Safety & Engineering",
     "status": "Prior interactive prototype · Public link pending",
     "summary": "Construction handover support assistant previously exercised with users; public access URL and deployable files remain unavailable here.",
-    "image": "buildings",
+    "image": "safe-handy",
     "url": "",
     "detail": "projects/safe-handy/",
     "chips": [
@@ -311,7 +311,7 @@
     "cat": "AI & Machine Learning",
     "status": "Completed challenge · Reported Kaggle MAE 2.52019",
     "summary": "Five-iteration taxi-fare regression study. A hybrid fare-formula and Random Forest fallback approach achieved a previously reported Kaggle MAE of 2.52019; local holdout findings are distinguished from the Kaggle result.",
-    "image": "fleet",
+    "image": "fare-ml",
     "url": "",
     "detail": "projects/fare-prediction/",
     "chips": [
@@ -327,7 +327,7 @@
     "cat": "Safety & Engineering",
     "status": "Workshop material · Presentation available",
     "summary": "Corporate safety facilitation built around reflection, collaborative practice and 3D-printed learning devices.",
-    "image": "facilitation-industrial",
+    "image": "facilitation",
     "url": "",
     "detail": "projects/facilitation/",
     "chips": [
